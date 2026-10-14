@@ -1,6 +1,5 @@
 import { CommandModule } from "yargs";
 
-import { executeActions } from "../actions";
 import { escapeIdentifier, withClient } from "../pg";
 import {
   ParsedSettings,
@@ -20,24 +19,23 @@ export async function _reset(
   parsedSettings: ParsedSettings,
   shadow: boolean,
 ): Promise<void> {
-  return parsedSettings.middleware.run(
-    "reset",
-    { parsedSettings, shadow },
-    ({ parsedSettings, shadow }) => resetImpl(parsedSettings, shadow),
+  const event = { parsedSettings, shadow };
+  return parsedSettings.middleware.run("reset", event, (event) =>
+    resetImpl(event),
   );
 }
 
-async function resetImpl(
-  parsedSettings: ParsedSettings,
-  shadow: boolean,
-): Promise<void> {
+async function resetImpl(event: {
+  parsedSettings: ParsedSettings;
+  shadow: boolean;
+}): Promise<void> {
+  const { parsedSettings, shadow } = event;
   const connectionString = shadow
     ? parsedSettings.shadowConnectionString
     : parsedSettings.connectionString;
   if (!connectionString) {
     throw new Error("Could not determine connection string for reset");
   }
-  await executeActions(parsedSettings, shadow, parsedSettings.beforeReset);
   await withClient(
     parsedSettings.rootConnectionString,
     parsedSettings,
@@ -78,7 +76,6 @@ async function resetImpl(
       );
     },
   );
-  await executeActions(parsedSettings, shadow, parsedSettings.afterReset);
   await _migrate(parsedSettings, shadow);
 }
 

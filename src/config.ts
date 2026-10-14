@@ -4,6 +4,7 @@ import { Middleware, orderedApply, resolvePreset } from "graphile-config";
 import { executeActions, makeValidateActionCallback } from "./actions";
 import type { CurrentMigrationLocation } from "./current";
 import { defaultLogger } from "./logger";
+import type { FileMigration } from "./migration";
 import { MigratePreset } from "./preset";
 import type { ParsedSettings, Settings } from "./settings";
 
@@ -22,11 +23,16 @@ export interface GraphileMigrateMiddleware {
     parsedSettings: ParsedSettings;
     shadow: boolean;
     forceActions: boolean;
+    /** Set by the core operation before it completes. */
+    hasChanges?: boolean;
+    remainingMigrations?: readonly FileMigration[];
   }): Promise<void>;
   currentMigration(event: {
     parsedSettings: ParsedSettings;
     shadow: boolean;
     forceActions: boolean;
+    /** Set by the core operation before it completes. */
+    hasChanges?: boolean;
   }): Promise<void>;
   readCurrentMigration(event: {
     parsedSettings: ParsedSettings;

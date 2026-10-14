@@ -44,6 +44,7 @@ export type ActionSpec = SqlActionSpec | CommandActionSpec;
 
 const exec = promisify(rawExec);
 
+/** @deprecated Use lifecycle middleware instead. */
 export async function executeActions(
   parsedSettings: ParsedSettings,
   shadow = false,

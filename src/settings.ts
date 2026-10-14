@@ -4,12 +4,7 @@ import { parse } from "pg-connection-string";
 import * as querystring from "querystring";
 import { format as formatURL, parse as parseURL } from "url";
 
-import {
-  ActionSpec,
-  CommandActionSpec,
-  makeValidateActionCallback,
-  SqlActionSpec,
-} from "./actions";
+import { ActionSpec, CommandActionSpec, SqlActionSpec } from "./actions";
 import type { GraphileMigrateMiddleware } from "./config";
 import {
   getGraphileMigrateMiddleware,
@@ -104,12 +99,6 @@ export interface ParsedSettings extends Settings {
   databaseName: string;
   shadowDatabaseName?: string;
   migrationsFolder: string;
-  beforeReset: ActionSpec[];
-  afterReset: ActionSpec[];
-  beforeAllMigrations: ActionSpec[];
-  afterAllMigrations: ActionSpec[];
-  beforeCurrent: ActionSpec[];
-  afterCurrent: ActionSpec[];
   blankMigrationContent: string;
   logger: Logger;
   /** @internal Middleware resolved from the Graphile Config preset. */
@@ -310,19 +299,6 @@ export async function parseSettings(
     },
   );
 
-  const validateAction = makeValidateActionCallback(logger);
-  const rootValidateAction = makeValidateActionCallback(logger, true);
-
-  const beforeReset = await check("beforeReset", rootValidateAction);
-  const afterReset = await check("afterReset", rootValidateAction);
-  const beforeAllMigrations = await check(
-    "beforeAllMigrations",
-    validateAction,
-  );
-  const afterAllMigrations = await check("afterAllMigrations", validateAction);
-  const beforeCurrent = await check("beforeCurrent", validateAction);
-  const afterCurrent = await check("afterCurrent", validateAction);
-
   const manageGraphileMigrateSchema = await check(
     "manageGraphileMigrateSchema",
     (mgms) => {
@@ -392,12 +368,6 @@ export async function parseSettings(
 
   const parsedSettings = {
     ...settings,
-    beforeReset,
-    beforeAllMigrations,
-    beforeCurrent,
-    afterReset,
-    afterAllMigrations,
-    afterCurrent,
     rootConnectionString,
     connectionString,
     manageGraphileMigrateSchema,

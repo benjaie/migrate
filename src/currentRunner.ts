@@ -1,6 +1,5 @@
 import pgMinify from "pg-minify";
 
-import { executeActions } from "./actions";
 import { getCurrentMigrationLocation, readCurrentMigration } from "./current";
 import { logDbError } from "./instrumentation";
 import type { DbCurrent } from "./interfaces";
@@ -18,14 +17,17 @@ export function makeCurrentMigrationRunner(
 ): () => Promise<void> {
   const { shadow = false, forceActions = false } = options;
   async function run(): Promise<void> {
-    return parsedSettings.middleware.run(
-      "currentMigration",
-      { parsedSettings, shadow, forceActions },
-      () => runImpl(),
-    );
+    const event = { parsedSettings, shadow, forceActions };
+    return runImpl(event);
   }
 
-  async function runImpl(): Promise<void> {
+  async function runImpl(event: {
+    parsedSettings: ParsedSettings;
+    shadow: boolean;
+    forceActions: boolean;
+    hasChanges?: boolean;
+  }): Promise<void> {
+    const { parsedSettings, shadow } = event;
     const currentLocation = await getCurrentMigrationLocation(parsedSettings);
     const body = await readCurrentMigration(parsedSettings, currentLocation);
     let migrationsAreEquivalent = false;
@@ -82,47 +84,49 @@ export function makeCurrentMigrationRunner(
             const currentBodyMinified = pgMinify(currentBodyFromDryRun);
             migrationsAreEquivalent =
               currentBodyMinified === previousBodyMinified;
+            event.hasChanges = !migrationsAreEquivalent;
 
-            // 3a: Run actions if the migrations are different OR if forced.
-            if (forceActions || !migrationsAreEquivalent) {
-              await executeActions(
-                parsedSettings,
-                shadow,
-                parsedSettings.beforeCurrent,
+            // 4: Run the lifecycle only when there is work to do, or when it
+            // was explicitly forced. It also lets plugins change the event
+            // before the underlying migration is executed.
+            if (event.hasChanges || event.forceActions) {
+              await parsedSettings.middleware.run(
+                "currentMigration",
+                event,
+                async (event) => {
+                  if (!event.hasChanges) return;
+
+                  // 4a: invert previous current; on success delete from graphile_migrate.current; on failure rollback and abort
+                  if (previousBody) {
+                    await reverseMigration(lockingPgClient, previousBody);
+                  }
+
+                  // COMMIT ─ because we need to commit that the migration was reversed
+                  await lockingPgClient.query("commit");
+                  await lockingPgClient.query("begin");
+                  // Re-establish a lock ASAP to continue with migration
+                  await lockingPgClient.query(
+                    "lock graphile_migrate.current in EXCLUSIVE mode",
+                  );
+
+                  // 4b: run this current (in its own independent transaction) if not empty
+                  if (currentBodyMinified !== "") {
+                    await withClient(
+                      connectionString,
+                      event.parsedSettings,
+                      (independentPgClient, context) =>
+                        runStringMigration(
+                          independentPgClient,
+                          event.parsedSettings,
+                          context,
+                          body,
+                          "current.sql",
+                          undefined,
+                        ),
+                    );
+                  }
+                },
               );
-            }
-
-            // 4: if different
-            if (!migrationsAreEquivalent) {
-              // 4a: invert previous current; on success delete from graphile_migrate.current; on failure rollback and abort
-              if (previousBody) {
-                await reverseMigration(lockingPgClient, previousBody);
-              }
-
-              // COMMIT ─ because we need to commit that the migration was reversed
-              await lockingPgClient.query("commit");
-              await lockingPgClient.query("begin");
-              // Re-establish a lock ASAP to continue with migration
-              await lockingPgClient.query(
-                "lock graphile_migrate.current in EXCLUSIVE mode",
-              );
-
-              // 4b: run this current (in its own independent transaction) if not empty
-              if (currentBodyMinified !== "") {
-                await withClient(
-                  connectionString,
-                  parsedSettings,
-                  (independentPgClient, context) =>
-                    runStringMigration(
-                      independentPgClient,
-                      parsedSettings,
-                      context,
-                      body,
-                      "current.sql",
-                      undefined,
-                    ),
-                );
-              }
             } else {
               parsedSettings.logger.info(
                 `[${new Date().toISOString()}]: current.sql unchanged, skipping migration`,
@@ -147,13 +151,6 @@ export function makeCurrentMigrationRunner(
       );
       const interval = process.hrtime(start);
       const duration = interval[0] * 1e3 + interval[1] * 1e-6;
-      if (forceActions || !migrationsAreEquivalent) {
-        await executeActions(
-          parsedSettings,
-          shadow,
-          parsedSettings.afterCurrent,
-        );
-      }
       const interval2 = process.hrtime(start);
       const duration2 = interval2[0] * 1e3 + interval2[1] * 1e-6;
       parsedSettings.logger.info(

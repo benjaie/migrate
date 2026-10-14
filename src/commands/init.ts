@@ -49,18 +49,22 @@ const MyMigrateLifecyclePlugin: GraphileConfig.Plugin = {
           // if (!shadow) await execFile("graphile-worker", ["--schema-only"]);
         }
       },
-      async allMigrations(next, { shadow }) {
+      async allMigrations(next, event) {
         try {
           return await next();
         } finally {
-          // if (shadow) await execFile("./scripts/dump-db");
+          // if (event.shadow && (event.hasChanges || event.forceActions)) {
+          //   await execFile("./scripts/dump-db");
+          // }
         }
       },
-      async currentMigration(next, { shadow }) {
+      async currentMigration(next, event) {
         try {
           return await next();
         } finally {
-          // if (shadow) await execFile("./scripts/test-seed");
+          // if (event.shadow && (event.hasChanges || event.forceActions)) {
+          //   await execFile("./scripts/test-seed");
+          // }
         }
       },
     },

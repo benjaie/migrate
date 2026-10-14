@@ -1,7 +1,7 @@
 import { CommandModule } from "yargs";
 
-import { executeActions } from "../actions";
 import {
+  FileMigration,
   getLastMigration,
   getMigrationsAfter,
   runCommittedMigration,
@@ -26,19 +26,18 @@ export async function _migrate(
   shadow = false,
   forceActions = false,
 ): Promise<void> {
-  return parsedSettings.middleware.run(
-    "allMigrations",
-    { parsedSettings, shadow, forceActions },
-    ({ parsedSettings, shadow, forceActions }) =>
-      migrateImpl(parsedSettings, shadow, forceActions),
-  );
+  const event = { parsedSettings, shadow, forceActions };
+  return migrateImpl(event);
 }
 
-async function migrateImpl(
-  parsedSettings: ParsedSettings,
-  shadow: boolean,
-  forceActions: boolean,
-): Promise<void> {
+async function migrateImpl(event: {
+  parsedSettings: ParsedSettings;
+  shadow: boolean;
+  forceActions: boolean;
+  hasChanges?: boolean;
+  remainingMigrations?: readonly FileMigration[];
+}): Promise<void> {
+  const { parsedSettings, shadow } = event;
   const connectionString = shadow
     ? parsedSettings.shadowConnectionString
     : parsedSettings.connectionString;
@@ -56,30 +55,23 @@ async function migrateImpl(
           parsedSettings,
           lastMigration,
         );
-        const shouldExecuteActions =
-          remainingMigrations.length > 0 || forceActions;
-        if (shouldExecuteActions) {
-          await executeActions(
-            parsedSettings,
-            shadow,
-            parsedSettings.beforeAllMigrations,
-          );
-        }
-        // Run migrations in series
-        for (const migration of remainingMigrations) {
-          await runCommittedMigration(
-            pgClient,
-            parsedSettings,
-            context,
-            migration,
-            logSuffix,
-          );
-        }
-        if (shouldExecuteActions) {
-          await executeActions(
-            parsedSettings,
-            shadow,
-            parsedSettings.afterAllMigrations,
+        event.hasChanges = remainingMigrations.length > 0;
+        event.remainingMigrations = remainingMigrations;
+        if (event.hasChanges || event.forceActions) {
+          await parsedSettings.middleware.run(
+            "allMigrations",
+            event,
+            async (event) => {
+              for (const migration of event.remainingMigrations || []) {
+                await runCommittedMigration(
+                  pgClient,
+                  event.parsedSettings,
+                  context,
+                  migration,
+                  logSuffix,
+                );
+              }
+            },
           );
         }
         parsedSettings.logger.info(
