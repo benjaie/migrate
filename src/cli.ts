@@ -82,8 +82,8 @@ const argv = yargs
   .option("config", {
     alias: "c",
     type: "string",
-    description: "Optional path to gmrc file",
-    defaultDescription: ".gmrc[.js|.cjs]",
+    description: "Optional path to Graphile Config preset",
+    defaultDescription: "graphile.config.* (.gmrc[.js|.cjs] deprecated)",
   })
 
   .completion("completion", "Generate shell completion script.")

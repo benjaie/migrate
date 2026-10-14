@@ -4,7 +4,7 @@ import { CommandModule } from "yargs";
 import { getCurrentMigrationLocation, readCurrentMigration } from "../current";
 import { getLastMigration, getMigrationsAfter } from "../migration";
 import { withClient } from "../pg";
-import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { ParsedSettings, parseSettings, SettingsOrPreset } from "../settings";
 import { CommonArgv, getSettings } from "./_common";
 
 interface StatusOptions {
@@ -57,7 +57,7 @@ async function _status(
 }
 
 export async function status(
-  settings: Settings,
+  settings: SettingsOrPreset,
   options: StatusOptions = {},
 ): Promise<Status> {
   const parsedSettings = await parseSettings(settings, true);

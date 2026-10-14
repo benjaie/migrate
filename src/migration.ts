@@ -134,6 +134,19 @@ export async function compileIncludes(
   content: string,
   processedFiles: ReadonlySet<string>,
 ): Promise<string> {
+  return parsedSettings.middleware.run(
+    "compileIncludes",
+    { parsedSettings, content, processedFiles },
+    ({ parsedSettings, content, processedFiles }) =>
+      compileIncludesImpl(parsedSettings, content, processedFiles),
+  );
+}
+
+async function compileIncludesImpl(
+  parsedSettings: ParsedSettings,
+  content: string,
+  processedFiles: ReadonlySet<string>,
+): Promise<string> {
   if (/--!\s*(End)?Included?/.test(content)) {
     throw new Error(
       "`--! Included` / `--! EndIncluded` comments not allowed in user migrations. Use `--!include` instead.",

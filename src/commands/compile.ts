@@ -1,7 +1,7 @@
 import { CommandModule } from "yargs";
 
 import { compileIncludes, compilePlaceholders } from "../migration";
-import { parseSettings, Settings } from "../settings";
+import { parseSettings, SettingsOrPreset } from "../settings";
 import { CommonArgv, getSettings, readFileOrStdin } from "./_common";
 
 interface CompileArgv extends CommonArgv {
@@ -18,7 +18,7 @@ function resolveOptions(options: CompileOptions | boolean) {
 }
 
 export async function compile(
-  settings: Settings,
+  settings: SettingsOrPreset,
   rawContent: string,
   options: boolean | CompileOptions = false,
 ): Promise<string> {

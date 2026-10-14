@@ -1,11 +1,21 @@
 import { constants } from "fs";
 import * as fsp from "fs/promises";
 import * as JSON5 from "json5";
-import { resolve } from "path";
+import { dirname, resolve } from "path";
 import { parse } from "pg-connection-string";
 import { pathToFileURL } from "url";
 
 import { Settings } from "../settings";
+
+// Jest 29 does not understand package export subpaths; resolving from the main
+// package keeps this compatible with it whilst still using graphile-config's
+// canonical loader.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { loadConfig } = require(
+  resolve(dirname(require.resolve("graphile-config")), "loadConfig.js"),
+) as {
+  loadConfig(configPath?: string | null): Promise<GraphileConfig.Preset | null>;
+};
 
 export const DEFAULT_GMRC_PATH = `${process.cwd()}/.gmrc`;
 export const DEFAULT_GMRCJS_PATH = `${DEFAULT_GMRC_PATH}.js`;
@@ -72,7 +82,13 @@ interface Options {
  * settings - the result of this call should not be trusted. Pass the result of
  * this function to `parseSettings` to get validated settings.
  */
-export async function getSettings(options: Options = {}): Promise<Settings> {
+/**
+ * Loads the project's Graphile Config preset. A legacy gmrc is supported as a
+ * deprecated fallback and is adapted into the `graphileMigrate` preset scope.
+ */
+export async function getSettings(
+  options: Options = {},
+): Promise<GraphileConfig.Preset & Settings> {
   const { configFile } = options;
   const tryRequire = async (path: string): Promise<Settings> => {
     // If the file is e.g. `foo.js` then Node `require('foo.js')` would look in
@@ -100,6 +116,21 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
     }
   };
 
+  const legacyPreset = (
+    settings: Settings,
+  ): GraphileConfig.Preset & Settings => ({
+    // Retain these properties temporarily for programmatic users of the old
+    // helper; parseSettings exclusively reads graphileMigrate from this point.
+    ...settings,
+    graphileMigrate: settings,
+  });
+  const warnGmrcDeprecation = () => {
+    // eslint-disable-next-line no-console
+    console.warn(
+      "[graphile-migrate] .gmrc is deprecated; move its settings to the `graphileMigrate` scope of graphile.config.*.",
+    );
+  };
+
   if (configFile != null) {
     if (!(await exists(configFile))) {
       throw new Error(`Failed to import '${configFile}': file not found`);
@@ -111,22 +142,47 @@ export async function getSettings(options: Options = {}): Promise<Settings> {
       );
     }
 
-    if (configFile.endsWith(".js") || configFile.endsWith(".cjs")) {
-      return tryRequire(configFile);
+    if (isLegacyConfigPath(configFile)) {
+      warnGmrcDeprecation();
+      if (configFile.endsWith(".js") || configFile.endsWith(".cjs")) {
+        return legacyPreset(await tryRequire(configFile));
+      } else {
+        return legacyPreset(await getSettingsFromJSON(configFile));
+      }
     } else {
-      return await getSettingsFromJSON(configFile);
+      const preset = await loadConfig(configFile);
+      if (!preset) {
+        throw new Error(`Failed to import '${configFile}': file not found`);
+      }
+      return preset;
     }
+  }
+
+  const preset = await loadConfig();
+  if (preset) {
+    return preset;
   } else if (await exists(DEFAULT_GMRC_PATH)) {
-    return await getSettingsFromJSON(DEFAULT_GMRC_PATH);
+    warnGmrcDeprecation();
+    return legacyPreset(await getSettingsFromJSON(DEFAULT_GMRC_PATH));
   } else if (await exists(DEFAULT_GMRCJS_PATH)) {
-    return tryRequire(DEFAULT_GMRCJS_PATH);
+    warnGmrcDeprecation();
+    return legacyPreset(await tryRequire(DEFAULT_GMRCJS_PATH));
   } else if (await exists(DEFAULT_GMRC_COMMONJS_PATH)) {
-    return tryRequire(DEFAULT_GMRC_COMMONJS_PATH);
+    warnGmrcDeprecation();
+    return legacyPreset(await tryRequire(DEFAULT_GMRC_COMMONJS_PATH));
   } else {
     throw new Error(
       "No .gmrc file found; please run `graphile-migrate init` first.",
     );
   }
+}
+
+function isLegacyConfigPath(configFile: string): boolean {
+  const basename = configFile.split(/[\\/]/).pop();
+  if (basename?.includes("gmrc")) return true;
+  // Historically --config accepted arbitrary JSON5 filenames. Retain that
+  // behaviour; named JavaScript/TypeScript configs are Graphile Config.
+  return !/\.(?:[cm]?[jt]sx?)$/.test(configFile);
 }
 
 export async function readFileOrStdin(file: unknown): Promise<{

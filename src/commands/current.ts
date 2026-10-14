@@ -2,7 +2,7 @@ import { CommandModule } from "yargs";
 
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { makeCurrentMigrationRunner } from "../currentRunner";
-import { parseSettings, Settings } from "../settings";
+import { parseSettings, SettingsOrPreset } from "../settings";
 import type { CommonArgv } from "./_common";
 import { getSettings } from "./_common";
 import { _migrate } from "./migrate";
@@ -13,7 +13,7 @@ interface CurrentArgv extends CommonArgv {
 }
 
 export async function current(
-  settings: Settings,
+  settings: SettingsOrPreset,
   options: Partial<CurrentArgv> = {},
 ): Promise<void> {
   const { shadow = false, forceActions = false } = options;

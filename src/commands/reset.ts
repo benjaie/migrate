@@ -2,7 +2,7 @@ import { CommandModule } from "yargs";
 
 import { executeActions } from "../actions";
 import { escapeIdentifier, withClient } from "../pg";
-import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { ParsedSettings, parseSettings, SettingsOrPreset } from "../settings";
 import { CommonArgv, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 
@@ -66,7 +66,10 @@ export async function _reset(
   await _migrate(parsedSettings, shadow);
 }
 
-export async function reset(settings: Settings, shadow = false): Promise<void> {
+export async function reset(
+  settings: SettingsOrPreset,
+  shadow = false,
+): Promise<void> {
   const parsedSettings = await parseSettings(settings, shadow);
   return _reset(parsedSettings, shadow);
 }

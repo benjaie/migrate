@@ -4,30 +4,25 @@ import { CommandModule } from "yargs";
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { parseSettings } from "../settings";
 import { version } from "../version";
-import {
-  CommonArgv,
-  DEFAULT_GMRC_PATH,
-  DEFAULT_GMRCJS_PATH,
-  exists,
-  getSettings,
-} from "./_common";
+import { CommonArgv, exists, getSettings } from "./_common";
+
+const DEFAULT_CONFIG_PATH = `${process.cwd()}/graphile.config.cjs`;
 
 interface InitArgv extends CommonArgv {
   folder?: boolean;
 }
 
 export async function init(options: InitArgv = {}): Promise<void> {
-  if (await exists(DEFAULT_GMRC_PATH)) {
-    throw new Error(`.gmrc file already exists at ${DEFAULT_GMRC_PATH}`);
-  }
-  if (await exists(DEFAULT_GMRCJS_PATH)) {
-    throw new Error(`.gmrc.js file already exists at ${DEFAULT_GMRCJS_PATH}`);
+  if (await exists(DEFAULT_CONFIG_PATH)) {
+    throw new Error(
+      `graphile.config.cjs file already exists at ${DEFAULT_CONFIG_PATH}`,
+    );
   }
   if (options.config && (await exists(options.config))) {
-    throw new Error(`.gmrc file already exists at ${options.config}`);
+    throw new Error(`Config file already exists at ${options.config}`);
   }
 
-  const gmrcPath = options.config || DEFAULT_GMRC_PATH;
+  const configPath = options.config || DEFAULT_CONFIG_PATH;
 
   const dbStrings =
     process.env.DATABASE_URL &&
@@ -185,14 +180,15 @@ export async function init(options: InitArgv = {}): Promise<void> {
   "//generatedWith": "${version}"
 }`;
 
-  const fileContent = gmrcPath.endsWith(".js")
-    ? `${initialComment}module.exports = ${jsonContent};\n`
-    : `${initialComment}${jsonContent}\n`;
-  await fsp.writeFile(gmrcPath, fileContent);
+  const fileContent = `${initialComment}module.exports = {
+  graphileMigrate: ${jsonContent},
+};
+`;
+  await fsp.writeFile(configPath, fileContent);
 
   // eslint-disable-next-line
   console.log(
-    `Template .gmrc file written to '${gmrcPath}'; please read and edit it to suit your needs.`,
+    `Template Graphile Config preset written to '${configPath}'; please read and edit it to suit your needs.`,
   );
   const settings = await getSettings({ configFile: options.config });
   const parsedSettings = await parseSettings({
@@ -225,7 +221,7 @@ export const initCommand: CommandModule<Record<string, never>, InitArgv> = {
   command: "init",
   aliases: [],
   describe: `\
-Initializes a graphile-migrate project by creating a \`.gmrc\` file and \`migrations\` folder.`,
+Initializes a graphile-migrate project by creating a \`graphile.config.cjs\` preset and \`migrations\` folder.`,
   builder: {
     folder: {
       type: "boolean",

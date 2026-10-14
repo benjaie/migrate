@@ -4,7 +4,7 @@ import { CommandModule } from "yargs";
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { makeCurrentMigrationRunner } from "../currentRunner";
 import { isLoggedError } from "../lib";
-import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { ParsedSettings, parseSettings, SettingsOrPreset } from "../settings";
 import { CommonArgv, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 
@@ -95,7 +95,7 @@ export async function _watch(
 }
 
 export async function watch(
-  settings: Settings,
+  settings: SettingsOrPreset,
   once = false,
   shadow = false,
 ): Promise<void> {

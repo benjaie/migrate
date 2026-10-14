@@ -1,4 +1,5 @@
 import { Logger } from "@graphile/logger";
+import type { Middleware } from "graphile-config";
 import { parse } from "pg-connection-string";
 import * as querystring from "querystring";
 import { format as formatURL, parse as parseURL } from "url";
@@ -9,6 +10,11 @@ import {
   makeValidateActionCallback,
   SqlActionSpec,
 } from "./actions";
+import type { GraphileMigrateMiddleware } from "./config";
+import {
+  getGraphileMigrateMiddleware,
+  resolveGraphileMigratePreset,
+} from "./config";
 import { defaultLogger } from "./logger";
 
 export type Actions = string | Array<string | ActionSpec>;
@@ -86,6 +92,8 @@ export interface Settings {
   logger?: Logger;
 }
 
+export type SettingsOrPreset = Settings | GraphileConfig.Preset;
+
 // NOTE: only override values that differ (e.g. changing non-nullability)
 export interface ParsedSettings extends Settings {
   connectionString: string;
@@ -102,12 +110,21 @@ export interface ParsedSettings extends Settings {
   afterCurrent: ActionSpec[];
   blankMigrationContent: string;
   logger: Logger;
+  /** @internal Middleware resolved from the Graphile Config preset. */
+  middleware: Middleware<GraphileMigrateMiddleware>;
+  /** @internal The resolved preset that produced these settings. */
+  resolvedPreset: GraphileConfig.ResolvedPreset;
 }
 
 export async function parseSettings(
-  settings: Settings,
+  settingsOrPreset: SettingsOrPreset,
   requireShadow = false,
 ): Promise<ParsedSettings> {
+  const preset = isGraphileMigratePreset(settingsOrPreset)
+    ? settingsOrPreset
+    : { graphileMigrate: settingsOrPreset };
+  const resolvedPreset = resolveGraphileMigratePreset(preset);
+  const settings = resolvedPreset.graphileMigrate || {};
   if (!settings) {
     throw new Error("Expected settings object");
   }
@@ -369,7 +386,7 @@ export async function parseSettings(
     throw new Error("Could not determine databaseName");
   }
 
-  return {
+  const parsedSettings = {
     ...settings,
     beforeReset,
     beforeAllMigrations,
@@ -390,7 +407,28 @@ export async function parseSettings(
     placeholders,
     blankMigrationContent,
     logger,
-  };
+  } as Omit<ParsedSettings, "middleware" | "resolvedPreset"> as ParsedSettings;
+  // These are implementation details rather than settings. Keeping them
+  // non-enumerable preserves the long-standing shape of ParsedSettings.
+  Object.defineProperties(parsedSettings, {
+    middleware: {
+      value: getGraphileMigrateMiddleware(resolvedPreset),
+      enumerable: false,
+    },
+    resolvedPreset: { value: resolvedPreset, enumerable: false },
+  });
+  return parsedSettings;
+}
+
+function isGraphileMigratePreset(
+  value: SettingsOrPreset,
+): value is GraphileConfig.Preset {
+  return (
+    "graphileMigrate" in value ||
+    "plugins" in value ||
+    "extends" in value ||
+    "disablePlugins" in value
+  );
 }
 
 /**

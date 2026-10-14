@@ -56,8 +56,14 @@ export async function readCurrentMigration(
   parsedSettings: ParsedSettings,
   location: CurrentMigrationLocation,
 ): Promise<string> {
-  const { body, paths } = await readCurrentMigrationRaw(location);
-  return compileIncludes(parsedSettings, body, new Set(paths));
+  return parsedSettings.middleware.run(
+    "readCurrentMigration",
+    { parsedSettings, location },
+    async ({ parsedSettings, location }) => {
+      const { body, paths } = await readCurrentMigrationRaw(location);
+      return compileIncludes(parsedSettings, body, new Set(paths));
+    },
+  );
 }
 
 async function readCurrentMigrationRaw(

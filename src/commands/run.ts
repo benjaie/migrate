@@ -8,7 +8,7 @@ import { withClient } from "../pgReal";
 import {
   makeRootDatabaseConnectionString,
   parseSettings,
-  Settings,
+  SettingsOrPreset,
 } from "../settings";
 import type { CommonArgv } from "./_common";
 import { getDatabaseName, getSettings, readFileOrStdin } from "./_common";
@@ -20,7 +20,7 @@ interface RunArgv extends CommonArgv {
 }
 
 export async function run<T extends QueryResultRow = QueryResultRow>(
-  settings: Settings,
+  settings: SettingsOrPreset,
   rawContent: string,
   filename: string,
   { shadow = false, root = false, rootDatabase = false }: RunArgv = {},

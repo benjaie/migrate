@@ -8,7 +8,7 @@ import {
 } from "../migration";
 import { withClient } from "../pg";
 import { withAdvisoryLock } from "../pgReal";
-import { ParsedSettings, parseSettings, Settings } from "../settings";
+import { ParsedSettings, parseSettings, SettingsOrPreset } from "../settings";
 import { CommonArgv, getSettings } from "./_common";
 
 interface MigrateArgv extends CommonArgv {
@@ -79,7 +79,7 @@ export async function _migrate(
 }
 
 export async function migrate(
-  settings: Settings,
+  settings: SettingsOrPreset,
   shadow = false,
   forceActions = false,
 ): Promise<void> {
