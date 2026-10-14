@@ -222,11 +222,6 @@ describe("actions", () => {
       afterReset: "foo.sql",
       afterAllMigrations: ["bar.sql", "baz.sql"],
     });
-    expect(parsedSettings.afterReset).toEqual([{ _: "sql", file: "foo.sql" }]);
-    expect(parsedSettings.afterAllMigrations).toEqual([
-      { _: "sql", file: "bar.sql" },
-      { _: "sql", file: "baz.sql" },
-    ]);
     sanitise(parsedSettings);
     mockFs.restore();
     expect(parsedSettings).toMatchSnapshot();
@@ -241,11 +236,6 @@ describe("actions", () => {
         { _: "sql", file: "baz.sql" },
       ],
     });
-    expect(parsedSettings.afterReset).toEqual([{ _: "sql", file: "foo.sql" }]);
-    expect(parsedSettings.afterAllMigrations).toEqual([
-      { _: "sql", file: "bar.sql" },
-      { _: "sql", file: "baz.sql" },
-    ]);
     sanitise(parsedSettings);
     mockFs.restore();
     expect(parsedSettings).toMatchSnapshot();
@@ -259,11 +249,6 @@ describe("actions", () => {
         { _: "command", command: "graphile-worker --once" },
       ],
     });
-    expect(parsedSettings.afterReset).toEqual([]);
-    expect(parsedSettings.afterAllMigrations).toEqual([
-      { _: "command", command: "pg_dump --schema-only" },
-      { _: "command", command: "graphile-worker --once" },
-    ]);
     sanitise(parsedSettings);
     mockFs.restore();
     expect(parsedSettings).toMatchSnapshot();
@@ -279,13 +264,6 @@ describe("actions", () => {
         { _: "command", command: "graphile-worker --once" },
       ],
     });
-    expect(parsedSettings.afterReset).toEqual([]);
-    expect(parsedSettings.afterAllMigrations).toEqual([
-      { _: "sql", file: "foo.sql" },
-      { _: "sql", file: "bar.sql" },
-      { _: "command", command: "pg_dump --schema-only" },
-      { _: "command", command: "graphile-worker --once" },
-    ]);
     sanitise(parsedSettings);
     mockFs.restore();
     expect(parsedSettings).toMatchSnapshot();
@@ -301,13 +279,6 @@ describe("actions", () => {
         { _: "command", command: "graphile-worker --once" },
       ],
     });
-    expect(parsedSettings.afterReset).toEqual([]);
-    expect(parsedSettings.afterAllMigrations).toEqual([
-      { _: "sql", file: "foo.sql" },
-      { _: "sql", file: "bar.sql" },
-      { _: "command", command: "pg_dump --schema-only" },
-      { _: "command", command: "graphile-worker --once" },
-    ]);
     sanitise(parsedSettings);
     mockFs.restore();
     expect(parsedSettings).toMatchSnapshot();

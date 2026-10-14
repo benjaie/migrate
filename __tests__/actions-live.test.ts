@@ -3,7 +3,7 @@ import "./helpers"; // Has side-effects; must come first
 import { Logger, LogLevel, LogMeta } from "@graphile/logger";
 import mockFs from "mock-fs";
 
-import { executeActions } from "../src/actions";
+import { executeActions, makeValidateActionCallback } from "../src/actions";
 import { _migrate } from "../src/commands/migrate";
 import { parseSettings } from "../src/settings";
 import { mockPgClient, TEST_DATABASE_URL } from "./helpers";
@@ -30,16 +30,15 @@ it("logs output from command actions on success", async () => {
   });
   const parsedSettings = await parseSettings({
     connectionString: TEST_DATABASE_URL,
-    afterAllMigrations: [
-      { _: "command", command: "echo 'success' && echo 'err' >&2" },
-    ],
     logger,
   });
   mockPgClient.query.mockClear();
   await executeActions(
     parsedSettings,
     false,
-    parsedSettings.afterAllMigrations,
+    makeValidateActionCallback(parsedSettings.logger)([
+      { _: "command", command: "echo 'success' && echo 'err' >&2" },
+    ]),
   );
   expect(mockPgClient.query).toHaveBeenCalledTimes(0);
   expect(logs).toHaveLength(2);
@@ -65,9 +64,6 @@ it("logs output from command actions on failure", async () => {
   });
   const parsedSettings = await parseSettings({
     connectionString: TEST_DATABASE_URL,
-    afterAllMigrations: [
-      { _: "command", command: "echo 'success' && echo 'err' >&2 && false" },
-    ],
     logger,
   });
   mockPgClient.query.mockClear();
@@ -76,7 +72,9 @@ it("logs output from command actions on failure", async () => {
     await executeActions(
       parsedSettings,
       false,
-      parsedSettings.afterAllMigrations,
+      makeValidateActionCallback(parsedSettings.logger)([
+        { _: "command", command: "echo 'success' && echo 'err' >&2 && false" },
+      ]),
     );
   } catch (e) {
     err = e;

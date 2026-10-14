@@ -2,29 +2,6 @@
 
 exports[`actions is backwards-compatible with untagged command specs 1`] = `
 {
-  "afterAllMigrations": [
-    {
-      "_": "sql",
-      "file": "foo.sql",
-    },
-    {
-      "_": "sql",
-      "file": "bar.sql",
-    },
-    {
-      "_": "command",
-      "command": "pg_dump --schema-only",
-    },
-    {
-      "_": "command",
-      "command": "graphile-worker --once",
-    },
-  ],
-  "afterCurrent": [],
-  "afterReset": [],
-  "beforeAllMigrations": [],
-  "beforeCurrent": [],
-  "beforeReset": [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
@@ -46,26 +23,6 @@ exports[`actions is backwards-compatible with untagged command specs 1`] = `
 
 exports[`actions parses SQL actions 1`] = `
 {
-  "afterAllMigrations": [
-    {
-      "_": "sql",
-      "file": "bar.sql",
-    },
-    {
-      "_": "sql",
-      "file": "baz.sql",
-    },
-  ],
-  "afterCurrent": [],
-  "afterReset": [
-    {
-      "_": "sql",
-      "file": "foo.sql",
-    },
-  ],
-  "beforeAllMigrations": [],
-  "beforeCurrent": [],
-  "beforeReset": [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
@@ -87,21 +44,6 @@ exports[`actions parses SQL actions 1`] = `
 
 exports[`actions parses command actions 1`] = `
 {
-  "afterAllMigrations": [
-    {
-      "_": "command",
-      "command": "pg_dump --schema-only",
-    },
-    {
-      "_": "command",
-      "command": "graphile-worker --once",
-    },
-  ],
-  "afterCurrent": [],
-  "afterReset": [],
-  "beforeAllMigrations": [],
-  "beforeCurrent": [],
-  "beforeReset": [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
@@ -123,29 +65,6 @@ exports[`actions parses command actions 1`] = `
 
 exports[`actions parses mixed actions 1`] = `
 {
-  "afterAllMigrations": [
-    {
-      "_": "sql",
-      "file": "foo.sql",
-    },
-    {
-      "_": "sql",
-      "file": "bar.sql",
-    },
-    {
-      "_": "command",
-      "command": "pg_dump --schema-only",
-    },
-    {
-      "_": "command",
-      "command": "graphile-worker --once",
-    },
-  ],
-  "afterCurrent": [],
-  "afterReset": [],
-  "beforeAllMigrations": [],
-  "beforeCurrent": [],
-  "beforeReset": [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",
@@ -167,26 +86,6 @@ exports[`actions parses mixed actions 1`] = `
 
 exports[`actions parses string values into SQL actions 1`] = `
 {
-  "afterAllMigrations": [
-    {
-      "_": "sql",
-      "file": "bar.sql",
-    },
-    {
-      "_": "sql",
-      "file": "baz.sql",
-    },
-  ],
-  "afterCurrent": [],
-  "afterReset": [
-    {
-      "_": "sql",
-      "file": "foo.sql",
-    },
-  ],
-  "beforeAllMigrations": [],
-  "beforeCurrent": [],
-  "beforeReset": [],
   "blankMigrationContent": "-- Enter migration here
 ",
   "connectionString": "postgres://localhost:5432/dbname?ssl=true",

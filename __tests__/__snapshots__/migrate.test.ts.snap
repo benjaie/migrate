@@ -13,10 +13,11 @@ exports[`handles errors during migration gracefully 2`] = `
         at withAdvisoryLock (~/src/pgReal.ts:[LINE]:[COL])
         at runCommittedMigration (~/src/migration.ts:[LINE]:[COL])
         at ~/src/commands/migrate.ts:[LINE]:[COL]
+        at ~/src/commands/migrate.ts:[LINE]:[COL]
         at withAdvisoryLock (~/src/pgReal.ts:[LINE]:[COL])
         at ~/src/commands/migrate.ts:[LINE]:[COL]
         at withClient (~/src/pgReal.ts:[LINE]:[COL])
-        at _migrate (~/src/commands/migrate.ts:[LINE]:[COL])
+        at migrateImpl (~/src/commands/migrate.ts:[LINE]:[COL])
         at Object.<anonymous> (~/__tests__/migrate.test.ts:[LINE]:[COL])
 
     Severity:	ERROR
