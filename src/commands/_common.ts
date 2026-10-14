@@ -5,6 +5,7 @@ import { dirname, resolve } from "path";
 import { parse } from "pg-connection-string";
 import { pathToFileURL } from "url";
 
+import { legacySettingsToPreset } from "../config";
 import { Settings } from "../settings";
 
 // Jest 29 does not understand package export subpaths; resolving from the main
@@ -78,17 +79,12 @@ interface Options {
 }
 
 /**
- * Gets the raw settings from the relevant .gmrc file. Does *not* validate the
- * settings - the result of this call should not be trusted. Pass the result of
- * this function to `parseSettings` to get validated settings.
- */
-/**
  * Loads the project's Graphile Config preset. A legacy gmrc is supported as a
- * deprecated fallback and is adapted into the `migrate` preset scope.
+ * deprecated fallback and converted into an equivalent preset.
  */
 export async function getSettings(
   options: Options = {},
-): Promise<GraphileConfig.Preset & Settings> {
+): Promise<GraphileConfig.Preset> {
   const { configFile } = options;
   const tryRequire = async (path: string): Promise<Settings> => {
     // If the file is e.g. `foo.js` then Node `require('foo.js')` would look in
@@ -116,14 +112,7 @@ export async function getSettings(
     }
   };
 
-  const legacyPreset = (
-    settings: Settings,
-  ): GraphileConfig.Preset & Settings => ({
-    // Retain these properties temporarily for programmatic users of the old
-    // helper; parseSettings exclusively reads migrate from this point.
-    ...settings,
-    migrate: settings,
-  });
+  const legacyPreset = legacySettingsToPreset;
   const warnGmrcDeprecation = () => {
     // eslint-disable-next-line no-console
     console.warn(
@@ -134,12 +123,6 @@ export async function getSettings(
   if (configFile != null) {
     if (!(await exists(configFile))) {
       throw new Error(`Failed to import '${configFile}': file not found`);
-    }
-
-    if (configFile.endsWith(".mjs")) {
-      throw new Error(
-        `ES module imports aren't currently supported, change your config extension to .cjs.`,
-      );
     }
 
     if (isLegacyConfigPath(configFile)) {

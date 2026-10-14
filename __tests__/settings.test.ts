@@ -340,7 +340,7 @@ describe("gmrc path", () => {
       `,
     });
     const settings = await getSettings();
-    expect(settings.connectionString).toEqual(
+    expect(settings.migrate?.connectionString).toEqual(
       "postgres://dbowner:password@host:5432/defaultdb",
     );
     mockFs.restore();
@@ -357,7 +357,7 @@ describe("gmrc path", () => {
       `,
     });
     const settings = await getSettings({ configFile: ".other-gmrc" });
-    expect(settings.connectionString).toEqual(
+    expect(settings.migrate?.connectionString).toEqual(
       "postgres://dbowner:password@host:5432/otherdb",
     );
     mockFs.restore();
@@ -379,7 +379,7 @@ module.exports = {
 };`,
     });
     const settings = await getSettings();
-    expect(settings.connectionString).toEqual(
+    expect(settings.migrate?.connectionString).toEqual(
       "postgres://dbowner:password@host:5432/gmrcjs_test",
     );
     mockFs.restore();
@@ -396,7 +396,7 @@ module.exports = {
 };`,
     });
     const settings = await getSettings();
-    expect(settings.connectionString).toEqual(
+    expect(settings.migrate?.connectionString).toEqual(
       "postgres://dbowner:password@host:5432/gmrc_commonjs_test",
     );
     mockFs.restore();

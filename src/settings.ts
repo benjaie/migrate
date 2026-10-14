@@ -13,6 +13,7 @@ import {
 import type { GraphileMigrateMiddleware } from "./config";
 import {
   getGraphileMigrateMiddleware,
+  getLegacyActions,
   resolveGraphileMigratePreset,
 } from "./config";
 import { defaultLogger } from "./logger";
@@ -124,7 +125,10 @@ export async function parseSettings(
     ? settingsOrPreset
     : { migrate: settingsOrPreset };
   const resolvedPreset = resolveGraphileMigratePreset(preset);
-  const settings = resolvedPreset.migrate || {};
+  const settings = {
+    ...getLegacyActions(resolvedPreset),
+    ...resolvedPreset.migrate,
+  };
   if (!settings) {
     throw new Error("Expected settings object");
   }
