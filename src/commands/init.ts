@@ -6,7 +6,7 @@ import { parseSettings } from "../settings";
 import { version } from "../version";
 import { CommonArgv, exists, getSettings } from "./_common";
 
-const DEFAULT_CONFIG_PATH = `${process.cwd()}/graphile.config.cjs`;
+const DEFAULT_CONFIG_PATH = `${process.cwd()}/graphile.config.mts`;
 
 interface InitArgv extends CommonArgv {
   folder?: boolean;
@@ -15,7 +15,7 @@ interface InitArgv extends CommonArgv {
 export async function init(options: InitArgv = {}): Promise<void> {
   if (await exists(DEFAULT_CONFIG_PATH)) {
     throw new Error(
-      `graphile.config.cjs file already exists at ${DEFAULT_CONFIG_PATH}`,
+      `graphile.config.mts file already exists at ${DEFAULT_CONFIG_PATH}`,
     );
   }
   if (options.config && (await exists(options.config))) {
@@ -180,9 +180,13 @@ export async function init(options: InitArgv = {}): Promise<void> {
   "//generatedWith": "${version}"
 }`;
 
-  const fileContent = `${initialComment}module.exports = {
+  const fileContent = `${initialComment}import type {} from "graphile-migrate";
+
+const preset: GraphileConfig.Preset = {
   graphileMigrate: ${jsonContent},
 };
+
+export default preset;
 `;
   await fsp.writeFile(configPath, fileContent);
 
@@ -190,7 +194,7 @@ export async function init(options: InitArgv = {}): Promise<void> {
   console.log(
     `Template Graphile Config preset written to '${configPath}'; please read and edit it to suit your needs.`,
   );
-  const settings = await getSettings({ configFile: options.config });
+  const settings = await getSettings({ configFile: configPath });
   const parsedSettings = await parseSettings({
     connectionString: process.env.DATABASE_URL || "NOT_NEEDED",
     shadowConnectionString: process.env.SHADOW_DATABASE_URL || "NOT_NEEDED",
@@ -221,7 +225,7 @@ export const initCommand: CommandModule<Record<string, never>, InitArgv> = {
   command: "init",
   aliases: [],
   describe: `\
-Initializes a graphile-migrate project by creating a \`graphile.config.cjs\` preset and \`migrations\` folder.`,
+Initializes a graphile-migrate project by creating a \`graphile.config.mts\` preset and \`migrations\` folder.`,
   builder: {
     folder: {
       type: "boolean",
