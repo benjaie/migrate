@@ -12,6 +12,20 @@ import type { ParsedSettings, Settings } from "./settings";
  * deliberately leaves room to add context without breaking plugins.
  */
 export interface GraphileMigrateMiddleware {
+  reset(event: {
+    parsedSettings: ParsedSettings;
+    shadow: boolean;
+  }): Promise<void>;
+  allMigrations(event: {
+    parsedSettings: ParsedSettings;
+    shadow: boolean;
+    forceActions: boolean;
+  }): Promise<void>;
+  currentMigration(event: {
+    parsedSettings: ParsedSettings;
+    shadow: boolean;
+    forceActions: boolean;
+  }): Promise<void>;
   readCurrentMigration(event: {
     parsedSettings: ParsedSettings;
     location: CurrentMigrationLocation;

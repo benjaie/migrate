@@ -18,6 +18,14 @@ export function makeCurrentMigrationRunner(
 ): () => Promise<void> {
   const { shadow = false, forceActions = false } = options;
   async function run(): Promise<void> {
+    return parsedSettings.middleware.run(
+      "currentMigration",
+      { parsedSettings, shadow, forceActions },
+      () => runImpl(),
+    );
+  }
+
+  async function runImpl(): Promise<void> {
     const currentLocation = await getCurrentMigrationLocation(parsedSettings);
     const body = await readCurrentMigration(parsedSettings, currentLocation);
     let migrationsAreEquivalent = false;

@@ -23,13 +23,49 @@ export async function init(options: InitArgv = {}): Promise<void> {
   }
 
   const configPath = options.config || DEFAULT_CONFIG_PATH;
-  const fileContent = `/*
+  const fileContent = `\
+/*
  * Graphile Migrate configuration. Do not commit secrets; prefer DATABASE_URL,
  * SHADOW_DATABASE_URL and ROOT_DATABASE_URL. This is native TypeScript, so
  * only use syntax supported by Node.js type stripping.
+ *
+ * Generated with graphile-migrate v${version}.
  */
 import { MigratePreset } from "graphile-migrate";
 import type {} from "graphile-migrate";
+import { execFile as rawExecFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFile = promisify(rawExecFile);
+
+const MyMigrateLifecyclePlugin: GraphileConfig.Plugin = {
+  name: "MyMigrateLifecyclePlugin",
+  migrate: {
+    middleware: {
+      async reset(next, { shadow }) {
+        try {
+          return await next();
+        } finally {
+          // if (!shadow) await execFile("graphile-worker", ["--schema-only"]);
+        }
+      },
+      async allMigrations(next, { shadow }) {
+        try {
+          return await next();
+        } finally {
+          // if (shadow) await execFile("./scripts/dump-db");
+        }
+      },
+      async currentMigration(next, { shadow }) {
+        try {
+          return await next();
+        } finally {
+          // if (shadow) await execFile("./scripts/test-seed");
+        }
+      },
+    },
+  },
+};
 
 const preset: GraphileConfig.Preset = {
   extends: [MigratePreset],
@@ -40,19 +76,22 @@ const preset: GraphileConfig.Preset = {
    * files and automatically include them in the current migration.
    */
   plugins: [
-    // MyMigratePlugin,
+    MyMigrateLifecyclePlugin,
   ],
 
   migrate: {
-    // connectionString: "postgres://dbowner:password@host:5432/appdb",
-    // shadowConnectionString: "postgres://dbowner:password@host:5432/appdb_shadow",
-    // rootConnectionString: "postgres://adminuser:password@host:5432/postgres",
-    // pgSettings: { search_path: "app_public, app_private, public" },
-    // placeholders: { ":DATABASE_VISITOR": "!ENV" },
+    connectionString: process.env.DATABASE_URL,
+    shadowConnectionString: process.env.SHADOW_DATABASE_URL,
+    rootConnectionString: process.env.ROOT_DATABASE_URL,
+    pgSettings: {
+      // search_path: "app_public, app_private, public",
+    },
+    placeholders: {
+      // ":DATABASE_VISITOR": process.env.DATABASE_VISITOR,
+    },
     // blankMigrationContent: "-- Write your migration here\\n",
     // migrationsFolder: "./migrations",
     // manageGraphileMigrateSchema: false,
-    "//generatedWith": "${version}",
   },
 };
 

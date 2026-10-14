@@ -15,6 +15,17 @@ export async function _reset(
   parsedSettings: ParsedSettings,
   shadow: boolean,
 ): Promise<void> {
+  return parsedSettings.middleware.run(
+    "reset",
+    { parsedSettings, shadow },
+    ({ parsedSettings, shadow }) => resetImpl(parsedSettings, shadow),
+  );
+}
+
+async function resetImpl(
+  parsedSettings: ParsedSettings,
+  shadow: boolean,
+): Promise<void> {
   const connectionString = shadow
     ? parsedSettings.shadowConnectionString
     : parsedSettings.connectionString;

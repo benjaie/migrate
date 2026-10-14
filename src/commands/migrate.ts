@@ -21,6 +21,19 @@ export async function _migrate(
   shadow = false,
   forceActions = false,
 ): Promise<void> {
+  return parsedSettings.middleware.run(
+    "allMigrations",
+    { parsedSettings, shadow, forceActions },
+    ({ parsedSettings, shadow, forceActions }) =>
+      migrateImpl(parsedSettings, shadow, forceActions),
+  );
+}
+
+async function migrateImpl(
+  parsedSettings: ParsedSettings,
+  shadow: boolean,
+  forceActions: boolean,
+): Promise<void> {
   const connectionString = shadow
     ? parsedSettings.shadowConnectionString
     : parsedSettings.connectionString;
