@@ -122,9 +122,9 @@ export async function parseSettings(
 ): Promise<ParsedSettings> {
   const preset = isGraphileMigratePreset(settingsOrPreset)
     ? settingsOrPreset
-    : { graphileMigrate: settingsOrPreset };
+    : { migrate: settingsOrPreset };
   const resolvedPreset = resolveGraphileMigratePreset(preset);
-  const settings = resolvedPreset.graphileMigrate || {};
+  const settings = resolvedPreset.migrate || {};
   if (!settings) {
     throw new Error("Expected settings object");
   }
@@ -424,7 +424,7 @@ function isGraphileMigratePreset(
   value: SettingsOrPreset,
 ): value is GraphileConfig.Preset {
   return (
-    "graphileMigrate" in value ||
+    "migrate" in value ||
     "plugins" in value ||
     "extends" in value ||
     "disablePlugins" in value

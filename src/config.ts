@@ -29,10 +29,10 @@ declare global {
   namespace GraphileConfig {
     interface Preset {
       /** Configuration options for graphile-migrate. */
-      graphileMigrate?: Settings;
+      migrate?: Settings;
     }
     interface Plugin {
-      graphileMigrate?: {
+      migrate?: {
         middleware?: MiddlewareHandlers<GraphileMigrateMiddleware>;
       };
     }
@@ -51,7 +51,7 @@ export function getGraphileMigrateMiddleware(
   const middleware = new Middleware<GraphileMigrateMiddleware>();
   orderedApply(
     resolvedPreset.plugins,
-    (plugin) => plugin.graphileMigrate?.middleware,
+    (plugin) => plugin.migrate?.middleware,
     (name, fn) => middleware.register(name, fn as never),
   );
   return middleware;

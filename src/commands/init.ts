@@ -183,7 +183,7 @@ export async function init(options: InitArgv = {}): Promise<void> {
   const fileContent = `${initialComment}import type {} from "graphile-migrate";
 
 const preset: GraphileConfig.Preset = {
-  graphileMigrate: ${jsonContent},
+  migrate: ${jsonContent},
 };
 
 export default preset;

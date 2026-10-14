@@ -84,7 +84,7 @@ interface Options {
  */
 /**
  * Loads the project's Graphile Config preset. A legacy gmrc is supported as a
- * deprecated fallback and is adapted into the `graphileMigrate` preset scope.
+ * deprecated fallback and is adapted into the `migrate` preset scope.
  */
 export async function getSettings(
   options: Options = {},
@@ -120,14 +120,14 @@ export async function getSettings(
     settings: Settings,
   ): GraphileConfig.Preset & Settings => ({
     // Retain these properties temporarily for programmatic users of the old
-    // helper; parseSettings exclusively reads graphileMigrate from this point.
+    // helper; parseSettings exclusively reads migrate from this point.
     ...settings,
-    graphileMigrate: settings,
+    migrate: settings,
   });
   const warnGmrcDeprecation = () => {
     // eslint-disable-next-line no-console
     console.warn(
-      "[graphile-migrate] .gmrc is deprecated; move its settings to the `graphileMigrate` scope of graphile.config.*.",
+      "[graphile-migrate] .gmrc is deprecated; move its settings to the `migrate` scope of graphile.config.*.",
     );
   };
 
