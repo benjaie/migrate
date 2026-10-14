@@ -1,7 +1,9 @@
 import type { MiddlewareHandlers } from "graphile-config";
 import { Middleware, orderedApply, resolvePreset } from "graphile-config";
 
+import { executeActions, makeValidateActionCallback } from "./actions";
 import type { CurrentMigrationLocation } from "./current";
+import { defaultLogger } from "./logger";
 import { MigratePreset } from "./preset";
 import type { ParsedSettings, Settings } from "./settings";
 
@@ -68,8 +70,6 @@ declare global {
     interface Plugin {
       migrate?: {
         middleware?: MiddlewareHandlers<GraphileMigrateMiddleware>;
-        /** @deprecated Compatibility adapter for a legacy .gmrc file. */
-        legacyActions?: LegacyActionSettings;
       };
     }
   }
@@ -91,9 +91,70 @@ export function legacySettingsToPreset(
 
   const plugins: GraphileConfig.Plugin[] = [];
   if (Object.keys(legacyActions).length > 0) {
+    const validate = makeValidateActionCallback(defaultLogger);
+    const validateRoot = makeValidateActionCallback(defaultLogger, true);
+
+    const beforeReset = validateRoot(legacyActions.beforeReset);
+    const afterReset = validateRoot(legacyActions.afterReset);
+    const beforeAllMigrations = validate(legacyActions.beforeAllMigrations);
+    const afterAllMigrations = validate(legacyActions.afterAllMigrations);
+    const beforeCurrent = validate(legacyActions.beforeCurrent);
+    const afterCurrent = validate(legacyActions.afterCurrent);
+
     plugins.push({
       name: "GraphileMigrateLegacyActionsPlugin",
-      migrate: { legacyActions },
+      migrate: {
+        middleware: {
+          async reset(next, event) {
+            await executeActions(
+              event.parsedSettings,
+              event.shadow,
+              beforeReset,
+            );
+            try {
+              return await next();
+            } finally {
+              await executeActions(
+                event.parsedSettings,
+                event.shadow,
+                afterReset,
+              );
+            }
+          },
+          async allMigrations(next, event) {
+            await executeActions(
+              event.parsedSettings,
+              event.shadow,
+              beforeAllMigrations,
+            );
+            try {
+              return await next();
+            } finally {
+              await executeActions(
+                event.parsedSettings,
+                event.shadow,
+                afterAllMigrations,
+              );
+            }
+          },
+          async currentMigration(next, event) {
+            await executeActions(
+              event.parsedSettings,
+              event.shadow,
+              beforeCurrent,
+            );
+            try {
+              return await next();
+            } finally {
+              await executeActions(
+                event.parsedSettings,
+                event.shadow,
+                afterCurrent,
+              );
+            }
+          },
+        },
+      },
     });
   }
 
@@ -102,17 +163,6 @@ export function legacySettingsToPreset(
     plugins,
     migrate,
   };
-}
-
-export function getLegacyActions(
-  resolvedPreset: GraphileConfig.ResolvedPreset,
-): LegacyActionSettings {
-  const actions: LegacyActionSettings = {};
-  for (const plugin of resolvedPreset.plugins) {
-    const legacyActions = plugin.migrate?.legacyActions;
-    if (legacyActions) Object.assign(actions, legacyActions);
-  }
-  return actions;
 }
 
 export function resolveGraphileMigratePreset(

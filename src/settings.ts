@@ -13,7 +13,7 @@ import {
 import type { GraphileMigrateMiddleware } from "./config";
 import {
   getGraphileMigrateMiddleware,
-  getLegacyActions,
+  legacySettingsToPreset,
   resolveGraphileMigratePreset,
 } from "./config";
 import { defaultLogger } from "./logger";
@@ -124,10 +124,9 @@ export async function parseSettings(
 ): Promise<ParsedSettings> {
   const preset = isGraphileMigratePreset(settingsOrPreset)
     ? settingsOrPreset
-    : { migrate: settingsOrPreset };
+    : legacySettingsToPreset(settingsOrPreset);
   const resolvedPreset = resolveGraphileMigratePreset(preset);
   const settings = {
-    ...getLegacyActions(resolvedPreset),
     ...resolvedPreset.migrate,
   };
   if (!settings) {

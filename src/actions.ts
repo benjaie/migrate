@@ -143,7 +143,7 @@ export async function executeActions(
 }
 
 export function makeValidateActionCallback(logger: Logger, allowRoot = false) {
-  return async (inputValue: unknown): Promise<ActionSpec[]> => {
+  return (inputValue: unknown): ActionSpec[] => {
     const specs: ActionSpec[] = [];
     if (inputValue) {
       const rawSpecArray = Array.isArray(inputValue)
@@ -183,7 +183,9 @@ export function makeValidateActionCallback(logger: Logger, allowRoot = false) {
             specs.push(rawSpec);
           } else {
             throw new Error(
-              `Action spec '${inspect(rawSpec)}' not supported; perhaps you need to upgrade?`,
+              `Action spec '${inspect(
+                rawSpec,
+              )}' not supported; perhaps you need to upgrade?`,
             );
           }
         } else {

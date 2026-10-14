@@ -12,9 +12,10 @@ import { Settings } from "../settings";
 // package keeps this compatible with it whilst still using graphile-config's
 // canonical loader.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { loadConfig } = require(
-  resolve(dirname(require.resolve("graphile-config")), "loadConfig.js"),
-) as {
+const { loadConfig } = require(resolve(
+  dirname(require.resolve("graphile-config")),
+  "loadConfig.js",
+)) as {
   loadConfig(configPath?: string | null): Promise<GraphileConfig.Preset | null>;
 };
 
