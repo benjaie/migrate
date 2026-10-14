@@ -20,9 +20,10 @@ export async function _reset(
   shadow: boolean,
 ): Promise<void> {
   const event = { parsedSettings, shadow };
-  return parsedSettings.middleware.run("reset", event, (event) =>
+  await parsedSettings.middleware.run("reset", event, (event) =>
     resetImpl(event),
   );
+  await _migrate(event.parsedSettings, event.shadow);
 }
 
 async function resetImpl(event: {
@@ -76,7 +77,6 @@ async function resetImpl(event: {
       );
     },
   );
-  await _migrate(parsedSettings, shadow);
 }
 
 export function reset(

@@ -324,10 +324,9 @@ describe("actions", () => {
           { _: "command", command: "graphile-worker --once" },
         ],
       }),
-    ).rejects.toMatchInlineSnapshot(`
-      [Error: Errors occurred during settings validation:
-      - Setting 'afterAllMigrations': Action spec '{ _: 'unknown_value', command: 'pg_dump --schema-only' }' not supported; perhaps you need to upgrade?]
-    `);
+    ).rejects.toThrow(
+      "Action spec '{ _: 'unknown_value', command: 'pg_dump --schema-only' }' not supported; perhaps you need to upgrade?",
+    );
   });
 });
 

@@ -4,7 +4,12 @@ import { parse } from "pg-connection-string";
 import * as querystring from "querystring";
 import { format as formatURL, parse as parseURL } from "url";
 
-import { ActionSpec, CommandActionSpec, SqlActionSpec } from "./actions";
+import {
+  ActionSpec,
+  CommandActionSpec,
+  makeValidateActionCallback,
+  SqlActionSpec,
+} from "./actions";
 import type { GraphileMigrateMiddleware } from "./config";
 import {
   getGraphileMigrateMiddleware,
@@ -101,6 +106,18 @@ export interface ParsedSettings extends Settings {
   migrationsFolder: string;
   blankMigrationContent: string;
   logger: Logger;
+  /** @deprecated Use lifecycle middleware instead. */
+  beforeReset: ActionSpec[];
+  /** @deprecated Use lifecycle middleware instead. */
+  afterReset: ActionSpec[];
+  /** @deprecated Use lifecycle middleware instead. */
+  beforeAllMigrations: ActionSpec[];
+  /** @deprecated Use lifecycle middleware instead. */
+  afterAllMigrations: ActionSpec[];
+  /** @deprecated Use lifecycle middleware instead. */
+  beforeCurrent: ActionSpec[];
+  /** @deprecated Use lifecycle middleware instead. */
+  afterCurrent: ActionSpec[];
   /** @internal Middleware resolved from the Graphile Config preset. */
   middleware: Middleware<GraphileMigrateMiddleware>;
   /** @internal The resolved preset that produced these settings. */
@@ -111,9 +128,22 @@ export async function parseSettings(
   settingsOrPreset: SettingsOrPreset,
   requireShadow = false,
 ): Promise<ParsedSettings> {
-  const preset = isGraphileMigratePreset(settingsOrPreset)
-    ? settingsOrPreset
-    : legacySettingsToPreset(settingsOrPreset);
+  const legacySettings = isGraphileMigratePreset(settingsOrPreset)
+    ? null
+    : settingsOrPreset;
+  const preset = legacySettings
+    ? legacySettingsToPreset(legacySettings)
+    : (settingsOrPreset as GraphileConfig.Preset);
+  const validateAction = makeValidateActionCallback(defaultLogger);
+  const validateRootAction = makeValidateActionCallback(defaultLogger, true);
+  const legacyActions = {
+    beforeReset: validateRootAction(legacySettings?.beforeReset),
+    afterReset: validateRootAction(legacySettings?.afterReset),
+    beforeAllMigrations: validateAction(legacySettings?.beforeAllMigrations),
+    afterAllMigrations: validateAction(legacySettings?.afterAllMigrations),
+    beforeCurrent: validateAction(legacySettings?.beforeCurrent),
+    afterCurrent: validateAction(legacySettings?.afterCurrent),
+  };
   const resolvedPreset = resolveGraphileMigratePreset(preset);
   const settings = {
     ...resolvedPreset.migrate,
@@ -381,6 +411,7 @@ export async function parseSettings(
     placeholders,
     blankMigrationContent,
     logger,
+    ...legacyActions,
   } as Omit<ParsedSettings, "middleware" | "resolvedPreset"> as ParsedSettings;
   // These are implementation details rather than settings. Keeping them
   // non-enumerable preserves the long-standing shape of ParsedSettings.

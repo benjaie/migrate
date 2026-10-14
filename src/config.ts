@@ -117,15 +117,13 @@ export function legacySettingsToPreset(
               event.shadow,
               beforeReset,
             );
-            try {
-              return await next();
-            } finally {
-              await executeActions(
-                event.parsedSettings,
-                event.shadow,
-                afterReset,
-              );
-            }
+            const result = await next();
+            await executeActions(
+              event.parsedSettings,
+              event.shadow,
+              afterReset,
+            );
+            return result;
           },
           async allMigrations(next, event) {
             await executeActions(
@@ -133,15 +131,13 @@ export function legacySettingsToPreset(
               event.shadow,
               beforeAllMigrations,
             );
-            try {
-              return await next();
-            } finally {
-              await executeActions(
-                event.parsedSettings,
-                event.shadow,
-                afterAllMigrations,
-              );
-            }
+            const result = await next();
+            await executeActions(
+              event.parsedSettings,
+              event.shadow,
+              afterAllMigrations,
+            );
+            return result;
           },
           async currentMigration(next, event) {
             await executeActions(
@@ -149,15 +145,13 @@ export function legacySettingsToPreset(
               event.shadow,
               beforeCurrent,
             );
-            try {
-              return await next();
-            } finally {
-              await executeActions(
-                event.parsedSettings,
-                event.shadow,
-                afterCurrent,
-              );
-            }
+            const result = await next();
+            await executeActions(
+              event.parsedSettings,
+              event.shadow,
+              afterCurrent,
+            );
+            return result;
           },
         },
       },

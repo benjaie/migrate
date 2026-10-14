@@ -13,6 +13,11 @@ interface InitArgv extends CommonArgv {
 }
 
 export async function init(options: InitArgv = {}): Promise<void> {
+  if (options.config && options.config.split(/[\\/]/).pop()?.includes("gmrc")) {
+    throw new Error(
+      "Cannot write a Graphile Config preset to a legacy .gmrc path; use graphile.config.mts instead.",
+    );
+  }
   if (await exists(DEFAULT_CONFIG_PATH)) {
     throw new Error(
       `graphile.config.mts file already exists at ${DEFAULT_CONFIG_PATH}`,
