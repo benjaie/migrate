@@ -95,73 +95,70 @@ export function legacySettingsToPreset(
     }
   }
 
-  const plugins: GraphileConfig.Plugin[] = [];
-  if (Object.keys(legacyActions).length > 0) {
-    const validate = makeValidateActionCallback(defaultLogger);
-    const validateRoot = makeValidateActionCallback(defaultLogger, true);
-
-    const beforeReset = validateRoot(legacyActions.beforeReset);
-    const afterReset = validateRoot(legacyActions.afterReset);
-    const beforeAllMigrations = validate(legacyActions.beforeAllMigrations);
-    const afterAllMigrations = validate(legacyActions.afterAllMigrations);
-    const beforeCurrent = validate(legacyActions.beforeCurrent);
-    const afterCurrent = validate(legacyActions.afterCurrent);
-
-    plugins.push({
-      name: "GraphileMigrateLegacyActionsPlugin",
-      migrate: {
-        middleware: {
-          async reset(next, event) {
-            await executeActions(
-              event.parsedSettings,
-              event.shadow,
-              beforeReset,
-            );
-            const result = await next();
-            await executeActions(
-              event.parsedSettings,
-              event.shadow,
-              afterReset,
-            );
-            return result;
-          },
-          async allMigrations(next, event) {
-            await executeActions(
-              event.parsedSettings,
-              event.shadow,
-              beforeAllMigrations,
-            );
-            const result = await next();
-            await executeActions(
-              event.parsedSettings,
-              event.shadow,
-              afterAllMigrations,
-            );
-            return result;
-          },
-          async currentMigration(next, event) {
-            await executeActions(
-              event.parsedSettings,
-              event.shadow,
-              beforeCurrent,
-            );
-            const result = await next();
-            await executeActions(
-              event.parsedSettings,
-              event.shadow,
-              afterCurrent,
-            );
-            return result;
-          },
-        },
-      },
-    });
-  }
-
   return {
     extends: [MigratePreset],
-    plugins,
+    plugins:
+      Object.keys(legacyActions).length > 0
+        ? [migrateLegacyLifecycle(legacyActions)]
+        : [],
     migrate,
+  };
+}
+
+/** Converts legacy lifecycle action settings into a middleware plugin. */
+export function migrateLegacyLifecycle(
+  legacyActions: LegacyActionSettings,
+): GraphileConfig.Plugin {
+  const validate = makeValidateActionCallback(defaultLogger);
+  const validateRoot = makeValidateActionCallback(defaultLogger, true);
+
+  const beforeReset = validateRoot(legacyActions.beforeReset);
+  const afterReset = validateRoot(legacyActions.afterReset);
+  const beforeAllMigrations = validate(legacyActions.beforeAllMigrations);
+  const afterAllMigrations = validate(legacyActions.afterAllMigrations);
+  const beforeCurrent = validate(legacyActions.beforeCurrent);
+  const afterCurrent = validate(legacyActions.afterCurrent);
+
+  return {
+    name: "GraphileMigrateLegacyActionsPlugin",
+    migrate: {
+      middleware: {
+        async reset(next, event) {
+          await executeActions(event.parsedSettings, event.shadow, beforeReset);
+          const result = await next();
+          await executeActions(event.parsedSettings, event.shadow, afterReset);
+          return result;
+        },
+        async allMigrations(next, event) {
+          await executeActions(
+            event.parsedSettings,
+            event.shadow,
+            beforeAllMigrations,
+          );
+          const result = await next();
+          await executeActions(
+            event.parsedSettings,
+            event.shadow,
+            afterAllMigrations,
+          );
+          return result;
+        },
+        async currentMigration(next, event) {
+          await executeActions(
+            event.parsedSettings,
+            event.shadow,
+            beforeCurrent,
+          );
+          const result = await next();
+          await executeActions(
+            event.parsedSettings,
+            event.shadow,
+            afterCurrent,
+          );
+          return result;
+        },
+      },
+    },
   };
 }
 
