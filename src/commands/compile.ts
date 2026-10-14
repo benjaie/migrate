@@ -1,7 +1,7 @@
 import { CommandModule } from "yargs";
 
 import { compileIncludes, compilePlaceholders } from "../migration";
-import { parseSettings, SettingsOrPreset } from "../settings";
+import { parseSettings, Settings, SettingsOrPreset } from "../settings";
 import { CommonArgv, getSettings, readFileOrStdin } from "./_common";
 
 interface CompileArgv extends CommonArgv {
@@ -17,6 +17,17 @@ function resolveOptions(options: CompileOptions | boolean) {
   return typeof options === "boolean" ? { shadow: options } : options;
 }
 
+export function compile(
+  preset: GraphileConfig.Preset,
+  rawContent: string,
+  options?: boolean | CompileOptions,
+): Promise<string>;
+/** @deprecated Please pass a Graphile Config preset. */
+export function compile(
+  settings: Settings,
+  rawContent: string,
+  options?: boolean | CompileOptions,
+): Promise<string>;
 export async function compile(
   settings: SettingsOrPreset,
   rawContent: string,

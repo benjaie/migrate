@@ -4,7 +4,12 @@ import { CommandModule } from "yargs";
 import { getCurrentMigrationLocation, readCurrentMigration } from "../current";
 import { getLastMigration, getMigrationsAfter } from "../migration";
 import { withClient } from "../pg";
-import { ParsedSettings, parseSettings, SettingsOrPreset } from "../settings";
+import {
+  ParsedSettings,
+  parseSettings,
+  Settings,
+  SettingsOrPreset,
+} from "../settings";
 import { CommonArgv, getSettings } from "./_common";
 
 interface StatusOptions {
@@ -56,6 +61,15 @@ async function _status(
   };
 }
 
+export function status(
+  preset: GraphileConfig.Preset,
+  options?: StatusOptions,
+): Promise<Status>;
+/** @deprecated Please pass a Graphile Config preset. */
+export function status(
+  settings: Settings,
+  options?: StatusOptions,
+): Promise<Status>;
 export async function status(
   settings: SettingsOrPreset,
   options: StatusOptions = {},

@@ -4,7 +4,12 @@ import { CommandModule } from "yargs";
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { makeCurrentMigrationRunner } from "../currentRunner";
 import { isLoggedError } from "../lib";
-import { ParsedSettings, parseSettings, SettingsOrPreset } from "../settings";
+import {
+  ParsedSettings,
+  parseSettings,
+  Settings,
+  SettingsOrPreset,
+} from "../settings";
 import { CommonArgv, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 
@@ -94,6 +99,17 @@ export async function _watch(
   }
 }
 
+export function watch(
+  preset: GraphileConfig.Preset,
+  once?: boolean,
+  shadow?: boolean,
+): Promise<void>;
+/** @deprecated Please pass a Graphile Config preset. */
+export function watch(
+  settings: Settings,
+  once?: boolean,
+  shadow?: boolean,
+): Promise<void>;
 export async function watch(
   settings: SettingsOrPreset,
   once = false,

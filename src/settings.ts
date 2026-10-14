@@ -70,6 +70,7 @@ export function isCommandActionSpec(o: unknown): o is CommandActionSpec {
  * This type is not trusted; to use the values within it, it must be
  * parsed/validated into ParsedSettings.
  */
+/** @deprecated Please pass a Graphile Config preset instead. */
 export interface Settings {
   connectionString?: string;
   shadowConnectionString?: string;

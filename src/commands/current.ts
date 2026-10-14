@@ -2,7 +2,7 @@ import { CommandModule } from "yargs";
 
 import { getCurrentMigrationLocation, writeCurrentMigration } from "../current";
 import { makeCurrentMigrationRunner } from "../currentRunner";
-import { parseSettings, SettingsOrPreset } from "../settings";
+import { parseSettings, Settings, SettingsOrPreset } from "../settings";
 import type { CommonArgv } from "./_common";
 import { getSettings } from "./_common";
 import { _migrate } from "./migrate";
@@ -12,6 +12,15 @@ interface CurrentArgv extends CommonArgv {
   forceActions?: boolean;
 }
 
+export function current(
+  preset: GraphileConfig.Preset,
+  options?: Partial<CurrentArgv>,
+): Promise<void>;
+/** @deprecated Please pass a Graphile Config preset. */
+export function current(
+  settings: Settings,
+  options?: Partial<CurrentArgv>,
+): Promise<void>;
 export async function current(
   settings: SettingsOrPreset,
   options: Partial<CurrentArgv> = {},

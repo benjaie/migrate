@@ -15,7 +15,12 @@ import {
   serializeMigration,
 } from "../migration";
 import { isMigrationFilename } from "../migrationFilename";
-import { ParsedSettings, parseSettings, SettingsOrPreset } from "../settings";
+import {
+  ParsedSettings,
+  parseSettings,
+  Settings,
+  SettingsOrPreset,
+} from "../settings";
 import { sluggify } from "../sluggify";
 import { CommonArgv, getSettings } from "./_common";
 import { _migrate } from "./migrate";
@@ -126,6 +131,15 @@ export async function _commit(
   }
 }
 
+export function commit(
+  preset: GraphileConfig.Preset,
+  message?: string | null,
+): Promise<void>;
+/** @deprecated Please pass a Graphile Config preset. */
+export function commit(
+  settings: Settings,
+  message?: string | null,
+): Promise<void>;
 export async function commit(
   settings: SettingsOrPreset,
   message?: string | null,

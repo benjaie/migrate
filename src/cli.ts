@@ -80,7 +80,7 @@ const argv = yargs
 
   // Make sure options added here are represented in CommonArgv
   .option("config", {
-    alias: "c",
+    alias: ["C", "c"],
     type: "string",
     description: "Optional path to Graphile Config preset",
     defaultDescription: "graphile.config.* (.gmrc[.js|.cjs] deprecated)",

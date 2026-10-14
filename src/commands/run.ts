@@ -8,6 +8,7 @@ import { withClient } from "../pgReal";
 import {
   makeRootDatabaseConnectionString,
   parseSettings,
+  Settings,
   SettingsOrPreset,
 } from "../settings";
 import type { CommonArgv } from "./_common";
@@ -19,6 +20,19 @@ interface RunArgv extends CommonArgv {
   rootDatabase?: boolean;
 }
 
+export function run<T extends QueryResultRow = QueryResultRow>(
+  preset: GraphileConfig.Preset,
+  rawContent: string,
+  filename: string,
+  options?: RunArgv,
+): Promise<T[] | undefined>;
+/** @deprecated Please pass a Graphile Config preset. */
+export function run<T extends QueryResultRow = QueryResultRow>(
+  settings: Settings,
+  rawContent: string,
+  filename: string,
+  options?: RunArgv,
+): Promise<T[] | undefined>;
 export async function run<T extends QueryResultRow = QueryResultRow>(
   settings: SettingsOrPreset,
   rawContent: string,

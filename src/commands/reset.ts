@@ -2,7 +2,12 @@ import { CommandModule } from "yargs";
 
 import { executeActions } from "../actions";
 import { escapeIdentifier, withClient } from "../pg";
-import { ParsedSettings, parseSettings, SettingsOrPreset } from "../settings";
+import {
+  ParsedSettings,
+  parseSettings,
+  Settings,
+  SettingsOrPreset,
+} from "../settings";
 import { CommonArgv, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 
@@ -77,6 +82,12 @@ async function resetImpl(
   await _migrate(parsedSettings, shadow);
 }
 
+export function reset(
+  preset: GraphileConfig.Preset,
+  shadow?: boolean,
+): Promise<void>;
+/** @deprecated Please pass a Graphile Config preset. */
+export function reset(settings: Settings, shadow?: boolean): Promise<void>;
 export async function reset(
   settings: SettingsOrPreset,
   shadow = false,

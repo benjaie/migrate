@@ -8,7 +8,12 @@ import {
 } from "../migration";
 import { withClient } from "../pg";
 import { withAdvisoryLock } from "../pgReal";
-import { ParsedSettings, parseSettings, SettingsOrPreset } from "../settings";
+import {
+  ParsedSettings,
+  parseSettings,
+  Settings,
+  SettingsOrPreset,
+} from "../settings";
 import { CommonArgv, getSettings } from "./_common";
 
 interface MigrateArgv extends CommonArgv {
@@ -91,6 +96,17 @@ async function migrateImpl(
   );
 }
 
+export function migrate(
+  preset: GraphileConfig.Preset,
+  shadow?: boolean,
+  forceActions?: boolean,
+): Promise<void>;
+/** @deprecated Please pass a Graphile Config preset. */
+export function migrate(
+  settings: Settings,
+  shadow?: boolean,
+  forceActions?: boolean,
+): Promise<void>;
 export async function migrate(
   settings: SettingsOrPreset,
   shadow = false,

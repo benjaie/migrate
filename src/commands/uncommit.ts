@@ -13,7 +13,12 @@ import {
   serializeMigration,
   undoMigration,
 } from "../migration";
-import { ParsedSettings, parseSettings, SettingsOrPreset } from "../settings";
+import {
+  ParsedSettings,
+  parseSettings,
+  Settings,
+  SettingsOrPreset,
+} from "../settings";
 import { CommonArgv, getSettings } from "./_common";
 import { _migrate } from "./migrate";
 import { _reset } from "./reset";
@@ -68,6 +73,9 @@ export async function _uncommit(parsedSettings: ParsedSettings): Promise<void> {
   await _migrate(parsedSettings, true, true);
 }
 
+export function uncommit(preset: GraphileConfig.Preset): Promise<void>;
+/** @deprecated Please pass a Graphile Config preset. */
+export function uncommit(settings: Settings): Promise<void>;
 export async function uncommit(settings: SettingsOrPreset): Promise<void> {
   const parsedSettings = await parseSettings(settings, true);
   return _uncommit(parsedSettings);
